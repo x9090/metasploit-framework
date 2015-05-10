@@ -1,5 +1,5 @@
 ##
-# This module requires Metasploit: http//metasploit.com/download
+# This module requires Metasploit: http://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
 ##
 
@@ -71,7 +71,6 @@ class Metasploit3 < Msf::Auxiliary
       end
 
       # Reporting
-
       report_service(
         :host => rhost,
         :port => rport,
@@ -102,7 +101,6 @@ class Metasploit3 < Msf::Auxiliary
       end
 
       # Logout
-
       postgres_logout
 
     rescue Rex::ConnectionError

@@ -1,5 +1,5 @@
 ##
-# This module requires Metasploit: http//metasploit.com/download
+# This module requires Metasploit: http://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
 ##
 
@@ -92,7 +92,7 @@ class Metasploit3 < Msf::Auxiliary
     end
   end
 
-  # Based vaugely on each_user_pass in AuthBrute
+  # Based vaguely on each_user_pass in AuthBrute
   def each_sid(&block)
     @@oracle_sid_fail = []
     @@oracle_sid_success = []

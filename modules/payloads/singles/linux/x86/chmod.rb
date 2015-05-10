@@ -1,5 +1,5 @@
 ##
-# This module requires Metasploit: http//metasploit.com/download
+# This module requires Metasploit: http://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
 ##
 
@@ -11,6 +11,9 @@ require 'msf/core'
 #  Kris Katterjohn - 03/03/2008
 ###
 module Metasploit3
+
+  CachedSize = 36
+
   include Msf::Payload::Single
   include Msf::Payload::Linux
 

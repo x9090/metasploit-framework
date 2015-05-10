@@ -18,12 +18,24 @@ module Msf::HTTP::Typo3::Login
       return nil
     end
 
-    e = res_main.body.match(/<input type="hidden" id="rsa_e" name="e" value="(\d+)" \/>/)[1]
-    n = res_main.body.match(/<input type="hidden" id="rsa_n" name="n" value="(\w+)" \/>/)[1]
-    vprint_debug("e: #{e}")
-    vprint_debug("n: #{n}")
+    e_match = res_main.body.match(/<input type="hidden" id="rsa_e" name="e" value="(\d+)" \/>/)
+    if e_match.nil?
+      vprint_error('Can not find rsa_e value')
+      return nil
+    end
+    e = e_match[1]
+
+    n_match = res_main.body.match(/<input type="hidden" id="rsa_n" name="n" value="(\w+)" \/>/)
+    if n_match.nil?
+      vprint_error('Can not find rsa_n value')
+      return nil
+    end
+    n = n_match[1]
+
+    vprint_status("e: #{e}")
+    vprint_status("n: #{n}")
     rsa_enc = typo3_helper_login_rsa(e, n, pass)
-    vprint_debug("RSA Hash: #{rsa_enc}")
+    vprint_status("RSA Hash: #{rsa_enc}")
     # make login request
     vars_post = {
       'n' => '',
@@ -46,10 +58,10 @@ module Msf::HTTP::Typo3::Login
     })
     if res_login
       if res_login.body =~ /<!-- ###LOGIN_ERROR### begin -->(.*)<!-- ###LOGIN_ERROR### end -->/im
-        vprint_debug(strip_tags($1))
+        vprint_status(strip_tags($1))
         return nil
       elsif res_login.body =~ /<p class="t3-error-text">(.*?)<\/p>/im
-        vprint_debug(strip_tags($1))
+        vprint_status(strip_tags($1))
         return nil
       else
         cookies = res_login.get_cookies

@@ -1,5 +1,6 @@
+require 'msf/core'
 
-$:.push "test/lib" unless $:.include? "test/lib"
+lib = File.join(Msf::Config.install_root, "test", "lib")
 require 'module_test'
 
 #load 'test/lib/module_test.rb'
@@ -13,7 +14,7 @@ class Metasploit4 < Msf::Post
 
   def initialize(info={})
     super( update_info( info,
-        'Name'          => 'Testing Get Envs',
+        'Name'          => 'Test Post::Common Get Envs',
         'Description'   => %q{ This module will test Post::Common get envs API methods },
         'License'       => MSF_LICENSE,
         'Author'        => [ 'Ben Campbell'],

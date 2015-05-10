@@ -1,5 +1,5 @@
 ##
-# This module requires Metasploit: http//metasploit.com/download
+# This module requires Metasploit: http://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
 ##
 
@@ -26,7 +26,6 @@ class Metasploit3 < Msf::Auxiliary
       },
       'Author'         =>
         [
-          'Alligator Security Team',
           'Heyder Andrade <heyder.andrade[at]gmail.com>',
           'Leandro Oliveira <leandrofernando[at]gmail.com>'
         ],
@@ -102,7 +101,7 @@ class Metasploit3 < Msf::Auxiliary
           'data'    => post_data,
         }, 20)
 
-      if res and res.code == 200 and res.headers['Set-Cookie']
+      if res and res.code == 200 and !res.get_cookies.empty?
         vprint_error("#{target_url} - Apache Tomcat #{user} not found ")
       elsif res and res.code == 200 and res.body =~ /invalid username/i
         vprint_error("#{target_url} - Apache Tomcat #{user} not found ")

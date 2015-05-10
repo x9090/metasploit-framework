@@ -3,6 +3,8 @@
 module Msf::Post::Common
 
   def rhost
+    return nil unless session
+
     case session.type
     when 'meterpreter'
       session.sock.peerhost
@@ -82,7 +84,7 @@ module Msf::Post::Common
     case session.type
     when /meterpreter/
       #
-      # The meterpreter API requires arguments to come seperately from the
+      # The meterpreter API requires arguments to come separately from the
       # executable path. This has no effect on Windows where the two are just
       # blithely concatenated and passed to CreateProcess or its brethren. On
       # POSIX, this allows the server to execve just the executable when a
@@ -110,7 +112,14 @@ module Msf::Post::Common
         break if d == ""
         o << d
       end
-      process.channel.close
+      o.chomp! if o
+
+      begin
+        process.channel.close
+      rescue IOError => e
+        # Channel was already closed, but we got the cmd output, so let's soldier on.
+      end
+
       process.close
     when /shell/
       o = session.shell_command_token("#{cmd} #{args}", time_out)

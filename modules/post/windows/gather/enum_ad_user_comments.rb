@@ -1,5 +1,5 @@
 ##
-# This module requires Metasploit: http//metasploit.com/download
+# This module requires Metasploit: http://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
 ##
 
@@ -20,7 +20,7 @@ class Metasploit3 < Msf::Post
         such users have their passwords specified in these fields.
         },
         'License'      => MSF_LICENSE,
-        'Author'       => [ 'Ben Campbell <eat_meatballs[at]hotmail.co.uk>' ],
+        'Author'       => [ 'Ben Campbell' ],
         'Platform'     => [ 'win' ],
         'SessionTypes' => [ 'meterpreter' ],
         'References'	=>
@@ -31,7 +31,7 @@ class Metasploit3 < Msf::Post
 
     register_options([
       OptBool.new('STORE_LOOT', [true, 'Store file in loot.', false]),
-      OptString.new('FIELDS', [true, 'Fields to retrieve.','sAMAccountName,userAccountControl,comment,description']),
+      OptString.new('FIELDS', [true, 'Fields to retrieve.','userPrincipalName,sAMAccountName,userAccountControl,comment,description']),
       OptString.new('FILTER', [true, 'Search filter.','(&(&(objectCategory=person)(objectClass=user))(|(description=*pass*)(comment=*pass*)))']),
     ], self.class)
   end
@@ -63,12 +63,12 @@ class Metasploit3 < Msf::Post
     q[:results].each do |result|
       row = []
 
-      report = {}
       result.each do |field|
-        if field.nil?
+        if field[:value].nil?
           row << ""
         else
-          row << field
+          row << field[:value]
+
         end
       end
 

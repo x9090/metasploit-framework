@@ -1,5 +1,5 @@
 ##
-# This module requires Metasploit: http//metasploit.com/download
+# This module requires Metasploit: http://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
 ##
 
@@ -73,7 +73,7 @@ class Metasploit3 < Msf::Auxiliary
 
           print_status(" TCP OPEN|FILTERED #{dhost}:#{dport}")
 
-          #Add Report
+          # Add Report
           report_note(
             :host	=> dhost,
             :proto	=> 'tcp',

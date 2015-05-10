@@ -49,7 +49,7 @@ module Msf::HTTP::Wordpress::Helpers
     options.merge!({'vars_post' => vars_post})
     options.merge!({'cookie' => login_cookie}) if login_cookie
     res = send_request_cgi(options)
-    if res and (res.code == 301 or res.code == 302) and res.headers['Location']
+    if res && res.redirect? && res.redirection
       return wordpress_helper_parse_location_header(res)
     else
       message = "#{peer} - Post comment failed."
@@ -101,7 +101,7 @@ module Msf::HTTP::Wordpress::Helpers
       else
         return res.body
       end
-    elsif res and (res.code == 301 or res.code == 302) and res.headers['Location']
+    elsif res && res.redirect? && res.redirection
       path = wordpress_helper_parse_location_header(res)
       return wordpress_helper_check_post_id(path, comments_enabled, login_cookie)
     end
@@ -113,10 +113,27 @@ module Msf::HTTP::Wordpress::Helpers
   # @param res [Rex::Proto::Http::Response] The HTTP response
   # @return [String,nil] the path and query, nil on error
   def wordpress_helper_parse_location_header(res)
-    return nil unless res and (res.code == 301 or res.code == 302) and res.headers['Location']
+    return nil unless res && res.redirect? && res.redirection
 
-    location = res.headers['Location']
+    location = res.redirection
     path_from_uri(location)
   end
 
+  # Helper method to retrieve a valid plugin upload nonce.
+  #
+  # @param cookie [String] A valid admin session cookie
+  # @return [String,nil] The nonce, nil on error
+  def wordpress_helper_get_plugin_upload_nonce(cookie)
+    uri = normalize_uri(wordpress_url_backend, 'plugin-install.php')
+    options = {
+      'method'    => 'GET',
+      'uri'       => uri,
+      'cookie'    => cookie,
+      'vars_get'  => { 'tab' => 'upload' }
+    }
+    res = send_request_cgi(options)
+    if res && res.code == 200
+      return res.body.to_s[/id="_wpnonce" name="_wpnonce" value="([a-z0-9]+)"/i, 1]
+    end
+  end
 end
